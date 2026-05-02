@@ -246,7 +246,14 @@
                 cursor: pointer;
             }
 
-            .container { display: flex; }
+            .container { 
+                display: flex;
+                height: calc(100vh - 110px);
+            }
+
+            #map{
+                flex: 1;
+            }
 
             #sidebar {
                 background: var(--whale-blue);
@@ -266,7 +273,7 @@
             <div id="auth-box">
                 <div id="auth-header">
                     <h2>Taiwan Cultural Trails</h2>
-                    <p>登入以開始探索台灣的歷史與文化</p>
+                    <p>登入以開始探索台灣各地創生文化</p>
                 </div>
 
                 <div class="auth-tabs">
@@ -349,7 +356,8 @@
                     <h2>Tools</h2>
                     <!-- 你原本的側邊欄內容放這裡 -->
                 </div>
-                <!-- 地圖或其他內容放這裡 -->
+                <div id="map">
+                </div>
             </div>
         </div>
 
@@ -390,10 +398,19 @@
             }
 
             // ── 登入成功後進入主頁 ──
+            let mapInitialized = false;
+
             function enterApp(name) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
                 document.getElementById('user-name-display').textContent = '👤 ' + name;
+
+                if (!mapInitialized) {
+                const map = L.map('map').setView([23.8, 121], 7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                mapInitialized = true;
+                }
             }
 
             // ── 登入 ──
