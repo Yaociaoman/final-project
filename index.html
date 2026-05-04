@@ -125,7 +125,55 @@
             letter-spacing: 0.1em; text-transform: uppercase;
             text-align: left; margin-bottom: 0.35rem; margin-top: 0.8rem;
         }
+        .start-input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(201,148,58,0.5);
+            border-radius: 4px;
+            color: var(--amber);
+            font-family: 'Noto Serif TC', serif;
+            font-size: 0.88rem;
+            outline: none;
+            margin-bottom:  0.15rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .start-input::placeholder { color:rgba(255,255,255,0.28);}
+        .start-input:focus { border-color: var(--stamp-gold); background: rgba(255,255,255,0.15);}
+        .start-input.error{ border-color: #e57373; }
 
+        .input-error-msg {
+            font-size: 0.64rem; color: #ef9a9a;
+            text-align: left; min-height: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .start-btn {
+            width: 100%; padding: 0.78rem;
+            background: var(--brick-red); color: var(--paper-white);
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95rem; letter-spacing: 0.1em;
+            border: none; border-radius: 4px; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 0.8rem;
+        }
+        .start-btn:hover { background: var(--brick-light); }
+        .start-btn:active { transform: scale(0.98); }
+
+        /* Auth alert */
+        .auth-alert {
+            font-size: 0.7rem; border-radius: 3px; padding: 0.5rem 0.7rem;
+            margin-top: 0.8rem; display: none; line-height: 1.5; text-align: left;
+        }
+        .auth-alert.error   { background: rgba(229,115,115,0.15); color: #ef9a9a; border: 1px solid rgba(229,115,115,0.3); display: block; }
+        .auth-alert.success { background: rgba(129,199,132,0.15); color: #a5d6a7; border: 1px solid rgba(129,199,132,0.3); display: block; }
+
+        .start-note {
+            font-size: 0.65rem; color: rgba(245,240,232,0.3);
+            margin-top: 1rem; line-height: 1.6;
+        }
+        #start-page.fade-out { animation: fadeOut 0.6s ease forwards; }
+        @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
 
             /* header */
             header{
