@@ -404,6 +404,202 @@
             </div>
         <script>
             //open first panel by default
+            /* ═══════════════════════════════════════════
+   AUTH HELPERS
+   帳號以 tct_accounts 儲存於 localStorage
+   格式: { username: { passwordHash, createdAt } }
+   密碼使用 SHA-256（Web Crypto API）雜湊
+═══════════════════════════════════════════ */
+const ACCOUNTS_KEY = 'tct_accounts';
+const SESSION_KEY  = 'tct_session';
+
+function getAccounts() {
+    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}');
+}
+function saveAccounts(accs) {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accs));
+}
+
+async function sha256(str) {
+    const buf = await crypto.subtle.digest(
+        'SHA-256', new TextEncoder().encode(str)
+    );
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function showAuthTab(tab) {
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-register').classList.toggle('active', tab === 'register');
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    clearAllAuthErrors();
+}
+function clearAllAuthErrors() {
+    ['login-username-err','login-password-err','login-alert',
+     'reg-username-err','reg-password-err','reg-confirm-err','reg-alert']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = ''; el.className = el.tagName === 'DIV' && el.classList.contains('auth-alert') ? 'auth-alert' : (el.className || ''); }
+        });
+    ['login-username','login-password','reg-username','reg-password','reg-confirm']
+        .forEach(id => document.getElementById(id)?.classList.remove('error'));
+}
+function clearRegErr(errId, inputId) {
+    document.getElementById(errId).textContent = '';
+    document.getElementById(inputId).classList.remove('error');
+}
+
+function checkPasswordStrength(pw) {
+    const fill  = document.getElementById('pw-fill');
+    const label = document.getElementById('pw-label');
+    if (!pw) { fill.style.width = '0%'; label.textContent = ''; return; }
+    let score = 0;
+    if (pw.length >= 6)  score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+        { w:'20%', c:'#e57373', t:'弱 Weak' },
+        { w:'40%', c:'#ffb74d', t:'普通 Fair' },
+        { w:'60%', c:'#fff176', t:'中 Medium' },
+        { w:'80%', c:'#aed581', t:'強 Strong' },
+        { w:'100%',c:'#81c784', t:'非常強 Very Strong' },
+    ];
+    const l = levels[Math.min(score - 1, 4)] || levels[0];
+    fill.style.width = l.w;
+    fill.style.background = l.c;
+    label.textContent = l.t;
+    label.style.color = l.c;
+    document.getElementById('reg-password-err').textContent = '';
+    document.getElementById('reg-password').classList.remove('error');
+}
+
+async function doLogin() {
+    const uEl = document.getElementById('login-username');
+    const pEl = document.getElementById('login-password');
+    const username = uEl.value.trim();
+    const password = pEl.value;
+    let ok = true;
+
+    if (!username) {
+        document.getElementById('login-username-err').textContent = '請輸入使用者名稱';
+        uEl.classList.add('error'); ok = false;
+    }
+    if (!password) {
+        document.getElementById('login-password-err').textContent = '請輸入密碼';
+        pEl.classList.add('error'); ok = false;
+    }
+    if (!ok) return;
+
+    const accs = getAccounts();
+    if (!accs[username]) {
+        const alert = document.getElementById('login-alert');
+        alert.textContent = '❌ 找不到此帳號，請先註冊。 / Account not found. Please register first.';
+        alert.className = 'auth-alert error';
+        uEl.classList.add('error');
+        return;
+    }
+    const hash = await sha256(password);
+    if (accs[username].passwordHash !== hash) {
+        const alert = document.getElementById('login-alert');
+        alert.textContent = '❌ 密碼錯誤。 / Incorrect password.';
+        alert.className = 'auth-alert error';
+        pEl.classList.add('error');
+        return;
+    }
+    localStorage.setItem(SESSION_KEY, username);
+    enterApp(username);
+}
+
+async function doRegister() {
+    const uEl  = document.getElementById('reg-username');
+    const pEl  = document.getElementById('reg-password');
+    const cEl  = document.getElementById('reg-confirm');
+    const username = uEl.value.trim();
+    const password = pEl.value;
+    const confirm  = cEl.value;
+    let ok = true;
+
+    if (username.length < 3) {
+        document.getElementById('reg-username-err').textContent = '使用者名稱至少 3 個字元 / Min. 3 characters';
+        uEl.classList.add('error'); ok = false;
+    }
+    if (password.length < 6) {
+        document.getElementById('reg-password-err').textContent = '密碼至少 6 字元 / Min. 6 characters';
+        pEl.classList.add('error'); ok = false;
+    }
+    if (password !== confirm) {
+        document.getElementById('reg-confirm-err').textContent = '兩次密碼不一致 / Passwords do not match';
+        cEl.classList.add('error'); ok = false;
+    }
+    if (!ok) return;
+
+    const accs = getAccounts();
+    if (accs[username]) {
+        const alert = document.getElementById('reg-alert');
+        alert.textContent = '❌ 此帳號已存在，請直接登入。 / Username already taken.';
+        alert.className = 'auth-alert error';
+        uEl.classList.add('error');
+        return;
+    }
+    const hash = await sha256(password);
+    accs[username] = { passwordHash: hash, createdAt: new Date().toISOString() };
+    saveAccounts(accs);
+
+    const alert = document.getElementById('reg-alert');
+    alert.textContent = `✓ 帳號「${username}」建立成功！正在跳轉登入… / Account created! Redirecting…`;
+    alert.className = 'auth-alert success';
+    setTimeout(() => {
+        document.getElementById('login-username').value = username;
+        showAuthTab('login');
+        document.getElementById('login-alert').textContent = `✓ 帳號建立成功！請輸入密碼登入。`;
+        document.getElementById('login-alert').className = 'auth-alert success';
+    }, 1200);
+}
+
+function doLogout() {
+    if (!confirm('確定要登出嗎？ / Sign out?')) return;
+    localStorage.removeItem(SESSION_KEY);
+    document.getElementById('header-user').textContent = '';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    clearAllAuthErrors();
+    showAuthTab('login');
+    const sp = document.getElementById('start-page');
+    sp.style.display = 'flex';
+    sp.style.opacity = '1';
+    sp.classList.remove('fade-out');
+    document.getElementById('sidebar').classList.add('collapsed');
+}
+
+function enterApp(username) {
+    document.getElementById('header-user').textContent = `Hi, ${username} 👋`;
+    const sp = document.getElementById('start-page');
+    sp.classList.add('fade-out');
+    setTimeout(() => sp.style.display = 'none', 650);
+    setTimeout(() => document.getElementById('sidebar').classList.remove('collapsed'), 400);
+}
+window.addEventListener('load', () => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+        const accs = getAccounts();
+        if (accs[saved]) { enterApp(saved); return; }
+        else localStorage.removeItem(SESSION_KEY);
+    }
+    const accs = getAccounts();
+    const lastUser = Object.keys(accs).pop();
+    if (lastUser) document.getElementById('login-username').value = lastUser;
+});
+
+['login-username','login-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+['reg-username','reg-password','reg-confirm'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+});
+
             selectLocation(0);
         </script>
     </body>
