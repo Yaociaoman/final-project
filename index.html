@@ -1,469 +1,1170 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <title>Taiwan Cultural Trail</title>
-        <style>
-            :root {
-                --brick-red:   #8e0302;
-                --brick-light: #b03b2a;
-                --paper-white: #f5f0e8;
-                --beige:       #d6b19b;
-                --whale-blue:  #024b57;
-                --deep-orange: #c05a04;
-                --seafoam:     #477273;
-                --amber:       #a56249;
-                --ink:         #1e1a16;
-                --stamp-gold:  #c9943a;
-            }
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@300;400;600&display=swap">
+    <title>Taiwan Cultural Trails</title>
+    <style>
+        :root {
+            --brick-red:    #9e2a1c;
+            --brick-light:  #c4503a;
+            --paper-white:  #faf6ef;
+            --beige:        #e2c9b5;
+            --whale-blue:   #2b5f6e;
+            --deep-orange:  #c96b1a;
+            --seafoam:      #5a8f8f;
+            --amber:        #b87355;
+            --ink:          #2c2420;
+            --stamp-gold:   #c9943a;
+            --stamp-shadow: rgba(0,0,0,0.10);
+            --bg:           var(--paper-white);
+            --sidebar-bg:   var(--whale-blue);
+            --panel-bg:     #fdf9f4;
+            --text:         var(--ink);
+            --header-bg:    var(--brick-red);
+        }
+        body.night {
+            --bg:        #14191c;
+            --sidebar-bg:#1a3040;
+            --panel-bg:  #1e2e38;
+            --text:      #ddd5c8;
+            --header-bg: #2a120d;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Serif TC', 'Times New Roman', serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.5s, color 0.5s;
+        }
 
-            * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ══════════════════════════════
+           START / AUTH PAGE
+        ══════════════════════════════ */
+        #start-page {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--whale-blue);
+            display: flex; align-items: center; justify-content: center;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 40px,
+                    rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 41px),
+                repeating-linear-gradient(90deg, transparent, transparent 40px,
+                    rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 41px);
+        }
+        #start-page::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 6px;
+            background: repeating-linear-gradient(90deg,
+                var(--stamp-gold) 0px 10px, transparent 10px 18px);
+        }
+        #start-page::after {
+            content: ''; position: absolute;
+            bottom: 0; left: 0; right: 0; height: 6px;
+            background: repeating-linear-gradient(90deg,
+                var(--stamp-gold) 0px 10px, transparent 10px 18px);
+        }
+        .start-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(201,148,58,0.4);
+            border-radius: 8px; padding: 2.5rem 3rem;
+            text-align: center; max-width: 440px; width: 90%;
+            backdrop-filter: blur(4px);
+        }
+        .start-stamp { font-size: 3.5rem; display: block; margin-bottom: 0.7rem; }
+        .start-card h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem; color: var(--paper-white);
+            letter-spacing: 0.06em; margin-bottom: 0.3rem;
+        }
+        .start-card .subtitle {
+            font-size: 0.78rem; color: var(--stamp-gold);
+            letter-spacing: 0.12em; text-transform: uppercase;
+            margin-bottom: 1.5rem; font-style: italic;
+        }
+        .dot-divider {
+            height: 3px; margin: 1.2rem 0; border-radius: 2px;
+            background: repeating-linear-gradient(90deg,
+                var(--stamp-gold) 0px 6px, transparent 6px 12px);
+        }
 
-            body {
-                font-family: "Times New Roman", serif;
-                background-color: var(--paper-white);
-                overflow: hidden;
-            }
+        /* Tab switcher inside card */
+        .auth-tabs {
+            display: flex; border: 1px solid rgba(201,148,58,0.35);
+            border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem;
+        }
+        .auth-tab {
+            flex: 1; padding: 0.52rem;
+            background: transparent; color: rgba(245,240,232,0.48);
+            font-family: 'Noto Serif TC', serif; font-size: 0.76rem;
+            letter-spacing: 0.08em; border: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .auth-tab.active {
+            background: var(--brick-red); color: var(--paper-white);
+        }
 
-            /* ───────────────────────────────
-               登入/註冊 遮罩
-            ─────────────────────────────── */
-            #auth-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(2, 30, 22, 0.82);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-            }
+        /* Form panels */
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
 
-            #auth-box {
-                background: var(--paper-white);
-                border-radius: 14px;
-                overflow: hidden;
-                width: 460px;
-                max-width: 95vw;
-                box-shadow: 0 12px 48px rgba(0,0,0,0.35);
-            }
+        .start-label {
+            font-size: 0.7rem; color: rgba(245,240,232,0.5);
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-align: left; margin-bottom: 0.35rem; margin-top: 0.8rem;
+        }
+        .start-input {
+            width: 100%; padding: 0.65rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(201,148,58,0.5);
+            border-radius: 4px; color: var(--paper-white);
+            font-family: 'Noto Serif TC', serif; font-size: 0.88rem;
+            outline: none; margin-bottom: 0.15rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .start-input::placeholder { color: rgba(255,255,255,0.28); }
+        .start-input:focus { border-color: var(--stamp-gold); background: rgba(255,255,255,0.15); }
+        .start-input.error { border-color: #e57373; }
 
-            #auth-header {
-                background: var(--brick-red);
-                color: var(--paper-white);
-                padding: 1.4rem 2rem;
-                text-align: center;
-            }
+        .input-error-msg {
+            font-size: 0.64rem; color: #ef9a9a;
+            text-align: left; min-height: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
 
-            #auth-header h2 {
-                font-size: 1.6rem;
-                letter-spacing: 0.04em;
-            }
+        .start-btn {
+            width: 100%; padding: 0.78rem;
+            background: var(--brick-red); color: var(--paper-white);
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95rem; letter-spacing: 0.1em;
+            border: none; border-radius: 4px; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 0.8rem;
+        }
+        .start-btn:hover { background: var(--brick-light); }
+        .start-btn:active { transform: scale(0.98); }
 
-            #auth-header p {
-                font-size: 0.85rem;
-                opacity: 0.8;
-                margin-top: 0.3rem;
-            }
+        /* Auth alert */
+        .auth-alert {
+            font-size: 0.7rem; border-radius: 3px; padding: 0.5rem 0.7rem;
+            margin-top: 0.8rem; display: none; line-height: 1.5; text-align: left;
+        }
+        .auth-alert.error   { background: rgba(229,115,115,0.15); color: #ef9a9a; border: 1px solid rgba(229,115,115,0.3); display: block; }
+        .auth-alert.success { background: rgba(129,199,132,0.15); color: #a5d6a7; border: 1px solid rgba(129,199,132,0.3); display: block; }
 
-            /* tabs */
-            .auth-tabs {
-                display: flex;
-                border-bottom: 2px solid var(--beige);
-            }
+        .start-note {
+            font-size: 0.65rem; color: rgba(245,240,232,0.3);
+            margin-top: 1rem; line-height: 1.6;
+        }
+        #start-page.fade-out { animation: fadeOut 0.6s ease forwards; }
+        @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
 
-            .auth-tab {
-                flex: 1;
-                padding: 0.7rem;
-                font-family: "Times New Roman", serif;
-                font-size: 1rem;
-                border: none;
-                background: #ede8df;
-                color: var(--amber);
-                cursor: pointer;
-                transition: background 0.2s;
-            }
+        /* ══════════════════════════════
+           HEADER
+        ══════════════════════════════ */
+        header {
+            background-color: var(--header-bg); color: var(--paper-white);
+            padding: 0.6rem 1rem 0.6rem 1.2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 3px solid var(--stamp-gold);
+            flex-shrink: 0; position: relative;
+            transition: background-color 0.5s;
+        }
+        header::after {
+            content: ''; position: absolute;
+            left: 0; right: 0; bottom: -6px; height: 4px;
+            background: repeating-linear-gradient(90deg,
+                var(--stamp-gold) 0px 8px, transparent 8px 14px);
+        }
+        .header-left { display: flex; align-items: center; gap: 0.8rem; }
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem; font-weight: 700; letter-spacing: 0.06em;
+        }
+        .header-sub { font-size: 0.73rem; opacity: 0.62; font-style: italic; }
+        .header-right { display: flex; align-items: center; gap: 0.7rem; }
+        .header-user { font-size: 0.75rem; color: var(--beige); }
+        .theme-toggle {
+            display: flex; align-items: center; gap: 0.4rem;
+            cursor: pointer; user-select: none;
+            font-size: 0.75rem; color: var(--beige);
+        }
+        .toggle-track {
+            width: 38px; height: 20px; background: var(--seafoam);
+            border-radius: 10px; position: relative; transition: background 0.3s;
+        }
+        .toggle-thumb {
+            position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: var(--paper-white);
+            border-radius: 50%; transition: transform 0.3s;
+        }
+        body.night .toggle-track { background: #1a4a5c; }
+        body.night .toggle-thumb { transform: translateX(18px); }
 
-            .auth-tab.active {
-                background: var(--paper-white);
-                color: var(--brick-red);
-                font-weight: bold;
-                border-bottom: 2px solid var(--brick-red);
-                margin-bottom: -2px;
-            }
+        /* Logout btn */
+        .logout-btn {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 0.68rem; letter-spacing: 0.07em;
+            padding: 0.3rem 0.75rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(201,148,58,0.45);
+            color: var(--beige); border-radius: 3px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover { background: rgba(158,42,28,0.5); color: white; }
 
-            /* form body */
-            .auth-form {
-                padding: 1.8rem 2rem;
-            }
+        /* ══════════════════════════════
+           TOOL BAR
+        ══════════════════════════════ */
+        .tool-bar {
+            background: var(--whale-blue);
+            display: flex; flex-shrink: 0;
+            border-bottom: 2px solid var(--stamp-gold);
+        }
+        .tool-btn {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+            padding: 0.55rem 1.2rem;
+            background: transparent; color: rgba(245,240,232,0.55);
+            border: none; border-right: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer; position: relative; transition: all 0.2s;
+        }
+        .tool-btn:hover { color: var(--paper-white); background: rgba(255,255,255,0.06); }
+        .tool-btn.active { color: var(--paper-white); background: var(--brick-red); }
+        .tool-btn.active::after {
+            content: ''; position: absolute;
+            bottom: -2px; left: 0; right: 0; height: 2px;
+            background: var(--stamp-gold);
+        }
 
-            .auth-form.hidden { display: none; }
+        /* ══════════════════════════════
+           MAP LAYOUT
+        ══════════════════════════════ */
+        .map-layout {
+            display: flex; flex: 1; overflow: hidden; position: relative;
+        }
+        .map-layout.hidden { display: none; }
+        #sidebar {
+            width: 260px; background: var(--sidebar-bg);
+            color: var(--paper-white);
+            display: flex; flex-direction: column;
+            flex-shrink: 0; overflow-y: auto;
+            border-right: 2px solid var(--stamp-gold);
+            position: relative;
+            transition: width 0.3s ease, border 0.3s ease, background 0.5s;
+        }
+        #sidebar.collapsed { width: 0; overflow: visible; border-right: none; }
+        #sidebar.collapsed .sidebar-section,
+        #sidebar.collapsed .location-list { display: none; }
+        #sidebar-toggle {
+            position: absolute;
+            top: 12px; right: -14px; z-index: 1100;
+            width: 28px; height: 28px;
+            background: var(--whale-blue);
+            border: 2px solid var(--stamp-gold);
+            border-radius: 50%;
+            color: var(--paper-white);
+            font-size: 0.8rem;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+            transition: background 0.2s, transform 0.3s;
+        }
+        #sidebar-toggle:hover { background: var(--brick-red); }
+        #sidebar.collapsed #sidebar-toggle { transform: scaleX(-1); }
+        .sidebar-section {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+        }
+        .sidebar-section h3 {
+            font-size: 0.67rem; text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--stamp-gold); margin-bottom: 0.6rem;
+        }
+        .search-wrap { position: relative; }
+        .search-wrap input {
+            width: 100%; padding: 0.42rem 0.65rem 0.42rem 1.7rem;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 4px; color: var(--paper-white);
+            font-family: inherit; font-size: 0.78rem;
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-wrap input::placeholder { color: rgba(255,255,255,0.33); }
+        .search-wrap input:focus { border-color: var(--stamp-gold); }
+        .search-icon {
+            position: absolute; left: 0.45rem; top: 50%;
+            transform: translateY(-50%); font-size: 0.7rem; opacity: 0.42;
+        }
+        .filter { display: flex; flex-direction: column; gap: 0.35rem; }
+        .filter-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            cursor: pointer; font-size: 0.76rem;
+            padding: 0.28rem 0.4rem; border-radius: 4px; transition: background 0.15s;
+        }
+        .filter-item:hover { background: rgba(255,255,255,0.07); }
+        .filter-item input[type="checkbox"] { display: none; }
+        .filter-box {
+            width: 14px; height: 14px;
+            border: 2px solid var(--beige); border-radius: 3px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+        .filter-item input:checked + .filter-box { background: var(--deep-orange); border-color: var(--deep-orange); }
+        .filter-item input:checked + .filter-box::after { content: '✓'; color: white; font-size: 10px; font-weight: bold; }
+        .filter-status { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
+        .location-list { display: flex; flex-direction: column; }
+        .loc-card {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 1rem; cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.15s;
+        }
+        .loc-card:hover { background: rgba(255,255,255,0.06); }
+        .loc-card.selected { background: rgba(158,42,28,0.3); border-left: 3px solid var(--brick-red); }
+        .loc-thumb {
+            width: 38px; height: 38px; border-radius: 4px;
+            background: var(--seafoam);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.05rem; flex-shrink: 0; overflow: hidden;
+        }
+        .loc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .loc-info { flex: 1; min-width: 0; }
+        .loc-name {
+            font-size: 0.75rem; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: var(--paper-white);
+        }
+        .loc-tag { font-size: 0.6rem; color: var(--beige); opacity: 0.75; margin-top: 2px; }
+        .loc-loading {
+            padding: 1.2rem; font-size: 0.73rem;
+            color: rgba(245,240,232,0.38); text-align: center; font-style: italic;
+        }
+        .map-container { flex: 1; position: relative; overflow: hidden; min-height: 0; }
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        .info-panel {
+            position: absolute; top: 0; right: 0; bottom: 0;
+            width: 300px; background: var(--panel-bg);
+            display: flex; flex-direction: column;
+            border-left: 2px solid var(--stamp-gold);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.5s;
+            z-index: 900;
+        }
+        .info-panel.open { transform: translateX(0); }
+        .panel-header {
+            background: var(--brick-red); color: var(--paper-white);
+            padding: 0.9rem 1rem; position: relative; flex-shrink: 0;
+        }
+        .panel-tag {
+            display: inline-block; font-size: 0.58rem; text-transform: uppercase;
+            letter-spacing: 0.1em; background: var(--deep-orange); color: white;
+            padding: 2px 7px; border-radius: 2px; margin-bottom: 0.3rem;
+        }
+        .panel-header h2 {
+            font-family: 'Playfair Display', serif; font-size: 1rem;
+            line-height: 1.35; padding-right: 1.4rem;
+        }
+        .panel-close {
+            position: absolute; top: 0.7rem; right: 0.7rem;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            font-size: 0.72rem; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .panel-close:hover { background: rgba(255,255,255,0.3); }
+        .panel-img {
+            width: 100%; height: 148px; background: var(--seafoam);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.9rem; flex-shrink: 0; overflow: hidden;
+        }
+        .panel-img img { width: 100%; height: 100%; object-fit: cover; }
+        .panel-body { padding: 0.85rem 1rem; flex: 1; }
+        .panel-body p { font-size: 0.78rem; line-height: 1.8; color: var(--text); opacity: 0.85; }
+        .panel-addr { font-size: 0.7rem; color: var(--seafoam); margin-top: 0.55rem; }
+        .panel-links { padding: 0 1rem 1rem; display: flex; flex-direction: column; gap: 0.45rem; }
+        .panel-link-btn {
+            display: block; padding: 0.58rem; text-align: center;
+            font-family: 'Noto Serif TC', serif; font-size: 0.73rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            border-radius: 3px; cursor: pointer; text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .panel-link-btn:hover { opacity: 0.8; }
+        .btn-primary { background: var(--brick-red); color: var(--paper-white); border: none; }
+        .btn-outline { background: transparent; color: var(--seafoam); border: 1px solid var(--seafoam); }
+        #api-status {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(43,95,110,0.92); color: var(--paper-white);
+            font-size: 0.67rem; padding: 4px 14px; border-radius: 20px;
+            pointer-events: none; opacity: 0; transition: opacity 0.4s;
+            z-index: 800; white-space: nowrap;
+        }
+        #api-status.show { opacity: 1; }
 
-            .form-group { margin-bottom: 1.1rem; }
+        /* ══════════════════════════════
+           STAMP PAGE
+        ══════════════════════════════ */
+        .stamp-page {
+            flex: 1; overflow-y: auto; background: var(--bg);
+            padding: 1.5rem 2rem; display: none; transition: background 0.5s;
+        }
+        .stamp-page.active { display: block; }
+        .photo-page {
+            flex: 1; overflow-y: auto; background: var(--bg);
+            padding: 1.5rem 2rem; display: none; transition: background 0.5s;
+        }
+        .photo-page.active { display: block; }
+        .page-title {
+            font-family: 'Playfair Display', serif; font-size: 1.35rem;
+            color: var(--brick-red); text-align: center; margin-bottom: 0.25rem;
+        }
+        .page-sub {
+            font-size: 0.75rem; text-align: center; color: var(--seafoam);
+            font-style: italic; margin-bottom: 1.5rem;
+        }
+        .stamp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px,1fr)); gap: 1.1rem; }
+        .stamp-item { display: flex; flex-direction: column; align-items: center; gap: 0.42rem; text-align: center; }
+        .stamp-circle {
+            width: 94px; height: 94px; border-radius: 50%;
+            border: 4px solid var(--stamp-gold); background: var(--paper-white);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.85rem; position: relative; overflow: hidden;
+            box-shadow: 0 2px 10px var(--stamp-shadow); transition: transform 0.2s;
+            cursor: default;
+        }
+        .stamp-circle:hover { transform: scale(1.06); }
+        .stamp-circle.locked { filter: grayscale(1); opacity: 0.4; }
+        .stamp-circle.locked::after {
+            content: '🔒'; position: absolute; inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; border-radius: 50%;
+        }
+        @keyframes stampIn {
+            0%   { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+            70%  { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .stamp-circle.just-unlocked { animation: stampIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .stamp-ribbon {
+            position: absolute; bottom: 5px; left: 0; right: 0;
+            background: var(--brick-red); color: white;
+            font-size: 0.4rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 2px 0; text-align: center;
+        }
+        .stamp-name { font-size: 0.67rem; font-weight: 600; color: var(--text); }
+        .stamp-status { font-size: 0.59rem; color: var(--seafoam); }
+        .stamp-status.unlocked { color: var(--deep-orange); }
+        .upload-zone {
+            border: 2px dashed var(--beige); border-radius: 8px;
+            padding: 2rem; text-align: center; cursor: pointer;
+            margin-bottom: 1.5rem; transition: border-color 0.2s, background 0.2s;
+        }
+        .upload-zone:hover { border-color: var(--stamp-gold); background: rgba(201,148,58,0.04); }
+        .upload-icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        .upload-zone p { font-size: 0.79rem; opacity: 0.7; line-height: 1.65; }
+        .geo-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            background: var(--seafoam); color: white; font-size: 0.63rem;
+            padding: 2px 9px; border-radius: 20px; margin-top: 0.5rem;
+        }
+        #upload-toast {
+            margin: 0 auto 1.2rem;
+            max-width: 500px;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            text-align: center;
+            display: none;
+            line-height: 1.5;
+        }
+        #upload-toast.success { background: #e8f5e4; color: #2e7d32; border: 1px solid #a5d6a7; display: block; }
+        #upload-toast.error   { background: #fdecea; color: #c62828; border: 1px solid #ef9a9a; display: block; }
+        #upload-toast.info    { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; display: block; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 0.9rem; }
+        .photo-card {
+            border-radius: 6px; overflow: hidden;
+            border: 1px solid var(--beige);
+            box-shadow: 0 2px 8px var(--stamp-shadow);
+            transition: transform 0.2s; cursor: pointer;
+        }
+        .photo-card:hover { transform: translateY(-3px); }
+        .photo-card-img {
+            width: 100%; height: 120px; overflow: hidden;
+            background: var(--seafoam);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .photo-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-info { padding: 0.45rem 0.65rem; background: var(--panel-bg); }
+        .photo-loc { font-size: 0.7rem; font-weight: 600; color: var(--text); }
+        .photo-date { font-size: 0.6rem; color: var(--seafoam); margin-top: 1px; }
+        #lightbox {
+            position: fixed; inset: 0; z-index: 9000;
+            background: rgba(0,0,0,0.88);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 0.8rem;
+        }
+        #lightbox.open { display: flex; }
+        #lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 4px; }
+        #lightbox-info { color: white; font-size: 0.8rem; text-align: center; opacity: 0.8; }
+        #lightbox-close {
+            position: absolute; top: 1rem; right: 1.2rem;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 32px; height: 32px; border-radius: 50%; font-size: 1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .leaflet-popup-content-wrapper {
+            background: var(--paper-white); border-top: 3px solid var(--brick-red);
+            border-radius: 4px; font-family: 'Noto Serif TC', serif;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .leaflet-popup-content { margin: 9px 12px; }
+        .popup-title { font-family:'Playfair Display',serif; font-size:0.86rem; color:var(--brick-red); font-weight:700; }
+        .popup-sub { font-size:0.66rem; color:var(--seafoam); margin-top:2px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--beige); border-radius: 2px; }
 
-            .form-row { display: flex; gap: 12px; }
-            .form-row .form-group { flex: 1; }
+        /* Password strength bar */
+        .pw-strength { margin-top: 0.35rem; margin-bottom: 0.1rem; }
+        .pw-strength-bar {
+            height: 3px; border-radius: 2px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .pw-strength-fill {
+            height: 100%; width: 0%;
+            transition: width 0.3s, background 0.3s;
+            border-radius: 2px;
+        }
+        .pw-strength-text {
+            font-size: 0.6rem; color: rgba(255,255,255,0.38);
+            margin-top: 3px; text-align: right; height: 1rem;
+        }
+    </style>
+</head>
+<body>
 
-            .auth-form label {
-                display: block;
-                font-size: 0.75rem;
-                color: var(--seafoam);
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                margin-bottom: 0.35rem;
-            }
+<!-- ══════════════════════════════
+     START / AUTH PAGE
+══════════════════════════════ -->
+<div id="start-page">
+    <div class="start-card">
+        <span class="start-stamp">🗺️</span>
+        <h1>Taiwan Cultural Trails</h1>
+        <p class="subtitle">Beneficial &amp; Sustainable Tourism</p>
+        <div class="dot-divider"></div>
 
-            .auth-form input[type="text"],
-            .auth-form input[type="email"],
-            .auth-form input[type="password"] {
-                width: 100%;
-                padding: 0.6rem 0.85rem;
-                border: 1px solid var(--beige);
-                border-radius: 7px;
-                font-family: "Times New Roman", serif;
-                font-size: 0.95rem;
-                background: #fffcf7;
-                color: var(--ink);
-                outline: none;
-                transition: border-color 0.2s, box-shadow 0.2s;
-            }
-
-            .auth-form input:focus {
-                border-color: var(--whale-blue);
-                box-shadow: 0 0 0 3px rgba(2,75,87,0.15);
-            }
-
-            /* 密碼強度 */
-            .strength-bars { display: flex; gap: 4px; margin-top: 5px; }
-            .s-bar { height: 3px; flex: 1; border-radius: 2px; background: var(--beige); transition: background 0.3s; }
-            .pw-hint { font-size: 0.72rem; color: var(--amber); margin-top: 3px; font-family: sans-serif; }
-
-            /* 忘記密碼 */
-            .label-row { display: flex; justify-content: space-between; align-items: center; }
-            .forgot { font-size: 0.75rem; color: var(--seafoam); cursor: pointer; }
-            .forgot:hover { text-decoration: underline; }
-
-            /* 主按鈕 */
-            .btn-auth {
-                width: 100%;
-                padding: 0.75rem;
-                background: var(--brick-red);
-                color: var(--paper-white);
-                border: none;
-                border-radius: 8px;
-                font-family: "Times New Roman", serif;
-                font-size: 1rem;
-                cursor: pointer;
-                margin-top: 0.5rem;
-                letter-spacing: 0.05em;
-                transition: background 0.2s, transform 0.1s;
-            }
-
-            .btn-auth:hover { background: var(--brick-light); }
-            .btn-auth:active { transform: scale(0.99); }
-
-            /* 錯誤訊息 */
-            .auth-error {
-                font-size: 0.8rem;
-                color: var(--brick-red);
-                background: #fdecea;
-                border: 1px solid #f5b8b8;
-                border-radius: 6px;
-                padding: 0.5rem 0.75rem;
-                margin-top: 0.8rem;
-                display: none;
-                font-family: sans-serif;
-            }
-
-            /* 切換連結 */
-            .auth-switch {
-                font-size: 0.82rem;
-                color: var(--amber);
-                text-align: center;
-                margin-top: 1rem;
-                font-family: sans-serif;
-            }
-
-            .auth-switch a { color: var(--whale-blue); cursor: pointer; }
-            .auth-switch a:hover { text-decoration: underline; }
-
-            /* ───────────────────────────────
-               主頁面（登入後顯示）
-            ─────────────────────────────── */
-            #main-app { display: none; }
-
-            header {
-                background-color: var(--brick-red);
-                color: var(--paper-white);
-                padding: 1rem;
-                text-align: center;
-                position: relative;
-            }
-
-            h1 { font-size: 50px; }
-            p  { font-size: 18px; }
-
-            /* 右上角使用者資訊 */
-            #user-info {
-                position: absolute;
-                top: 50%;
-                right: 1.2rem;
-                transform: translateY(-50%);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-size: 0.85rem;
-                color: var(--paper-white);
-                font-family: sans-serif;
-            }
-
-            #user-info span { opacity: 0.9; }
-
-            #btn-logout {
-                background: transparent;
-                border: 1px solid rgba(255,255,255,0.5);
-                color: var(--paper-white);
-                padding: 4px 10px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 0.8rem;
-                font-family: sans-serif;
-                transition: background 0.2s;
-            }
-
-            #btn-logout:hover { background: rgba(255,255,255,0.15); }
-
-            .tab-btn {
-                font-family: "Times New Roman", serif;
-                font-size: 20px;
-                background-color: var(--seafoam);
-                color: var(--paper-white);
-                width: 200px;
-                height: 40px;
-                border: none;
-                cursor: pointer;
-            }
-
-            .container { 
-                display: flex;
-                height: calc(100vh - 110px);
-            }
-
-            #map{
-                flex: 1;
-            }
-
-            #sidebar {
-                background: var(--whale-blue);
-                padding: 20px;
-                width: 250px;
-                color: var(--paper-white);
-                min-height: calc(100vh - 120px);
-            }
-        </style>
-    </head>
-    <body>
-
-        <!-- ══════════════════════════════
-             登入 / 註冊 彈窗
-        ══════════════════════════════ -->
-        <div id="auth-overlay">
-            <div id="auth-box">
-                <div id="auth-header">
-                    <h2>Taiwan Cultural Trails</h2>
-                    <p>登入以開始探索台灣各地創生文化</p>
-                </div>
-
-                <div class="auth-tabs">
-                    <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">登入</button>
-                    <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">註冊</button>
-                </div>
-
-                <!-- 登入表單 -->
-                <div class="auth-form" id="form-login">
-                    <div class="form-group">
-                        <label>電子郵件</label>
-                        <input type="email" id="login-email" placeholder="you@example.com" />
-                    </div>
-                    <div class="form-group">
-                        <div class="label-row">
-                            <label>密碼</label>
-                            <span class="forgot" onclick="alert('重設連結已寄出！')">忘記密碼？</span>
-                        </div>
-                        <input type="password" id="login-password" placeholder="••••••••" />
-                    </div>
-                    <button class="btn-auth" onclick="handleLogin()">登入</button>
-                    <div class="auth-error" id="login-error"></div>
-                    <p class="auth-switch">還沒有帳號？<a onclick="switchAuthTab('register')">立即註冊</a></p>
-                </div>
-
-                <!-- 註冊表單 -->
-                <div class="auth-form hidden" id="form-register">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>使用者名稱</label>
-                            <input type="text" id="reg-username" placeholder="user123" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>電子郵件</label>
-                        <input type="email" id="reg-email" placeholder="you@example.com" />
-                    </div>
-                    <div class="form-group">
-                        <label>密碼</label>
-                        <input type="password" id="reg-password" placeholder="至少 8 個字元"
-                               oninput="checkStrength(this.value)" />
-                        <div class="strength-bars">
-                            <div class="s-bar" id="s1"></div>
-                            <div class="s-bar" id="s2"></div>
-                            <div class="s-bar" id="s3"></div>
-                            <div class="s-bar" id="s4"></div>
-                        </div>
-                        <div class="pw-hint" id="pw-hint">請輸入密碼</div>
-                    </div>
-                    <button class="btn-auth" onclick="handleRegister()">建立帳號</button>
-                    <div class="auth-error" id="register-error"></div>
-                    <p class="auth-switch">已有帳號？<a onclick="switchAuthTab('login')">立即登入</a></p>
-                </div>
-            </div>
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login"    onclick="showAuthTab('login')">登入 · Sign In</button>
+            <button class="auth-tab"        id="tab-register" onclick="showAuthTab('register')">註冊 · Register</button>
         </div>
 
-        <!-- ══════════════════════════════
-             主頁面（登入後顯示）
-        ══════════════════════════════ -->
-        <div id="main-app">
-            <header>
-                <h1>Taiwan Cultural Trails</h1>
-                <p>Feel free to explore the historical sites and local artists in Taiwan!</p>
-                <div id="user-info">
-                    <span id="user-name-display"></span>
-                    <button id="btn-logout" onclick="handleLogout()">登出</button>
-                </div>
-            </header>
+        <!-- LOGIN FORM -->
+        <div class="auth-form active" id="form-login">
+            <div class="start-label">使用者名稱 / Username</div>
+            <input class="start-input" id="login-username" type="text"
+                   placeholder="輸入你的帳號…" autocomplete="username" maxlength="24">
+            <div class="input-error-msg" id="login-username-err"></div>
 
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('explore', this)">Explore Map</button>
-            </div>
+            <div class="start-label">密碼 / Password</div>
+            <input class="start-input" id="login-password" type="password"
+                   placeholder="輸入你的密碼…" autocomplete="current-password">
+            <div class="input-error-msg" id="login-password-err"></div>
 
-            <div class="container">
-                <div id="sidebar">
-                    <h2>Tools</h2>
-                    <!-- 你原本的側邊欄內容放這裡 -->
-                </div>
-                <div id="map">
-                </div>
-            </div>
+            <div class="auth-alert" id="login-alert"></div>
+            <button class="start-btn" onclick="doLogin()">登入 · Sign In</button>
         </div>
 
-        <script>
-            // ── 切換登入/註冊 tab ──
-            function switchAuthTab(tab) {
-                const isLogin = tab === 'login';
-                document.getElementById('tab-login').classList.toggle('active', isLogin);
-                document.getElementById('tab-register').classList.toggle('active', !isLogin);
-                document.getElementById('form-login').classList.toggle('hidden', !isLogin);
-                document.getElementById('form-register').classList.toggle('hidden', isLogin);
-            }
+        <!-- REGISTER FORM -->
+        <div class="auth-form" id="form-register">
+            <div class="start-label">使用者名稱 / Username</div>
+            <input class="start-input" id="reg-username" type="text"
+                   placeholder="設定你的帳號 (3–20字元)…" autocomplete="username" maxlength="24"
+                   oninput="clearRegErr('reg-username-err','reg-username')">
+            <div class="input-error-msg" id="reg-username-err"></div>
 
-            // ── 密碼強度 ──
-            function checkStrength(value) {
-                let score = 0;
-                if (value.length >= 8)          score++;
-                if (/[A-Z]/.test(value))        score++;
-                if (/[0-9]/.test(value))        score++;
-                if (/[^A-Za-z0-9]/.test(value)) score++;
+            <div class="start-label">密碼 / Password</div>
+            <input class="start-input" id="reg-password" type="password"
+                   placeholder="設定密碼 (至少 6 字元)…" autocomplete="new-password"
+                   oninput="checkPasswordStrength(this.value)">
+            <div class="pw-strength">
+                <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill"></div></div>
+                <div class="pw-strength-text" id="pw-label"></div>
+            </div>
+            <div class="input-error-msg" id="reg-password-err"></div>
 
-                const colors = ['#c05a04', '#c9943a', '#477273', '#024b57'];
-                const labels = ['太弱', '還可以', '不錯', '非常強'];
+            <div class="start-label">確認密碼 / Confirm Password</div>
+            <input class="start-input" id="reg-confirm" type="password"
+                   placeholder="再次輸入密碼…" autocomplete="new-password"
+                   oninput="clearRegErr('reg-confirm-err','reg-confirm')">
+            <div class="input-error-msg" id="reg-confirm-err"></div>
 
-                for (let i = 1; i <= 4; i++) {
-                    document.getElementById('s' + i).style.background =
-                        i <= score ? colors[score - 1] : '#d6b19b';
+            <div class="auth-alert" id="reg-alert"></div>
+            <button class="start-btn" onclick="doRegister()">建立帳號 · Create Account</button>
+        </div>
+
+        <p class="start-note">帳號資料僅儲存於您的瀏覽器，不會上傳任何伺服器。<br>
+        Account data is stored locally in your browser only.</p>
+    </div>
+</div>
+
+
+<!-- HEADER -->
+<header>
+    <div class="header-left">
+        <div>
+            <h1>Taiwan Cultural Trails</h1>
+            <div class="header-sub">Explore historical sites &amp; local artisans across Taiwan</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <span class="header-user" id="header-user"></span>
+        <label class="theme-toggle" id="themeToggle" title="Day/Night">
+            ☀︎
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+            ☾
+        </label>
+        <button class="logout-btn" onclick="doLogout()" title="登出">登出 · Logout</button>
+    </div>
+</header>
+
+
+<!-- TOOL BAR -->
+<div class="tool-bar">
+    <button class="tool-btn active" onclick="switchTab('map',this)">🗺 Explore Map</button>
+    <button class="tool-btn"        onclick="switchTab('stamps',this)">📮 Stamp Collection</button>
+    <button class="tool-btn"        onclick="switchTab('memory',this)">📷 Memory Photos</button>
+</div>
+
+
+<!-- MAP PAGE -->
+<div class="map-layout" id="mapLayout">
+    <div id="sidebar" class="collapsed">
+        <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">‹</button>
+        <div class="sidebar-section">
+            <h3>⌕ Search</h3>
+            <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" id="searchInput" placeholder="Search location, brand...">
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <h3>Filter by Category</h3>
+            <div class="filter" id="Filter">
+                <label class="filter-item">
+                    <input type="checkbox" value="歷史建築" checked onchange="applyFilter()">
+                    <div class="filter-box"></div>
+                    Historical Building
+                    <span class="filter-status" style="background:#c96b1a"></span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" value="文創市集" checked onchange="applyFilter()">
+                    <div class="filter-box"></div>
+                    Creative Market
+                    <span class="filter-status" style="background:#5a8f8f"></span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" value="工藝商店" onchange="applyFilter()">
+                    <div class="filter-box"></div>
+                    Local Craft Shop
+                    <span class="filter-status" style="background:#b87355"></span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" value="文化中心" onchange="applyFilter()">
+                    <div class="filter-box"></div>
+                    Cultural Center
+                    <span class="filter-status" style="background:#2b5f6e"></span>
+                </label>
+            </div>
+        </div>
+        <div class="sidebar-section" style="padding-bottom:0.4rem;border-bottom:none;">
+            <h3>Locations</h3>
+        </div>
+        <div class="location-list" id="locationList">
+            <div class="loc-loading">Loading cultural sites...</div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map"></div>
+        <div id="api-status"></div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <div class="panel-header">
+            <div class="panel-tag" id="panelTag">Category</div>
+            <h2 id="panelTitle">Location Name</h2>
+            <button class="panel-close" onclick="closePanel()">✕</button>
+        </div>
+        <div class="panel-img" id="panelImg">🏛️</div>
+        <div class="panel-body">
+            <p id="panelDesc">Description...</p>
+            <div class="panel-addr" id="panelAddr"></div>
+        </div>
+        <div class="panel-links" id="panelLinks"></div>
+    </div>
+</div>
+
+
+<!-- STAMP PAGE -->
+<div class="stamp-page" id="stampPage">
+    <div class="page-title">📮 Stamp Collection</div>
+    <p class="page-sub">Visit each location in person (within 500 m) and upload a photo to unlock your stamp.</p>
+    <div class="stamp-grid" id="stampGrid"></div>
+</div>
+
+
+<!-- MEMORY PHOTO PAGE -->
+<div class="photo-page" id="photoPage">
+    <div class="page-title">📷 Memory Photos</div>
+    <p class="page-sub">Upload a photo taken at a cultural site — GPS in the photo will be verified automatically.</p>
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📤</div>
+        <p>Click to upload your memory photo<br>
+           <small>GPS location will be read from photo EXIF data</small></p>
+        <div class="geo-badge">📍 Geolocation Active</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none"
+           onchange="handlePhotoUpload(this)">
+    <div id="upload-toast"></div>
+    <div class="photo-grid" id="photoGrid"></div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()">
+    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div id="lightbox-info"></div>
+</div>
+
+
+<script>
+/* ═══════════════════════════════════════════
+   AUTH HELPERS
+   帳號以 tct_accounts 儲存於 localStorage
+   格式: { username: { passwordHash, createdAt } }
+   密碼使用 SHA-256（Web Crypto API）雜湊
+═══════════════════════════════════════════ */
+const ACCOUNTS_KEY = 'tct_accounts';
+const SESSION_KEY  = 'tct_session';
+
+function getAccounts() {
+    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}');
+}
+function saveAccounts(accs) {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accs));
+}
+
+async function sha256(str) {
+    const buf = await crypto.subtle.digest(
+        'SHA-256', new TextEncoder().encode(str)
+    );
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function showAuthTab(tab) {
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-register').classList.toggle('active', tab === 'register');
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    clearAllAuthErrors();
+}
+function clearAllAuthErrors() {
+    ['login-username-err','login-password-err','login-alert',
+     'reg-username-err','reg-password-err','reg-confirm-err','reg-alert']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = ''; el.className = el.tagName === 'DIV' && el.classList.contains('auth-alert') ? 'auth-alert' : (el.className || ''); }
+        });
+    ['login-username','login-password','reg-username','reg-password','reg-confirm']
+        .forEach(id => document.getElementById(id)?.classList.remove('error'));
+}
+function clearRegErr(errId, inputId) {
+    document.getElementById(errId).textContent = '';
+    document.getElementById(inputId).classList.remove('error');
+}
+
+function checkPasswordStrength(pw) {
+    const fill  = document.getElementById('pw-fill');
+    const label = document.getElementById('pw-label');
+    if (!pw) { fill.style.width = '0%'; label.textContent = ''; return; }
+    let score = 0;
+    if (pw.length >= 6)  score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+        { w:'20%', c:'#e57373', t:'弱 Weak' },
+        { w:'40%', c:'#ffb74d', t:'普通 Fair' },
+        { w:'60%', c:'#fff176', t:'中 Medium' },
+        { w:'80%', c:'#aed581', t:'強 Strong' },
+        { w:'100%',c:'#81c784', t:'非常強 Very Strong' },
+    ];
+    const l = levels[Math.min(score - 1, 4)] || levels[0];
+    fill.style.width = l.w;
+    fill.style.background = l.c;
+    label.textContent = l.t;
+    label.style.color = l.c;
+    document.getElementById('reg-password-err').textContent = '';
+    document.getElementById('reg-password').classList.remove('error');
+}
+
+async function doLogin() {
+    const uEl = document.getElementById('login-username');
+    const pEl = document.getElementById('login-password');
+    const username = uEl.value.trim();
+    const password = pEl.value;
+    let ok = true;
+
+    if (!username) {
+        document.getElementById('login-username-err').textContent = '請輸入使用者名稱';
+        uEl.classList.add('error'); ok = false;
+    }
+    if (!password) {
+        document.getElementById('login-password-err').textContent = '請輸入密碼';
+        pEl.classList.add('error'); ok = false;
+    }
+    if (!ok) return;
+
+    const accs = getAccounts();
+    if (!accs[username]) {
+        const alert = document.getElementById('login-alert');
+        alert.textContent = '❌ 找不到此帳號，請先註冊。 / Account not found. Please register first.';
+        alert.className = 'auth-alert error';
+        uEl.classList.add('error');
+        return;
+    }
+    const hash = await sha256(password);
+    if (accs[username].passwordHash !== hash) {
+        const alert = document.getElementById('login-alert');
+        alert.textContent = '❌ 密碼錯誤。 / Incorrect password.';
+        alert.className = 'auth-alert error';
+        pEl.classList.add('error');
+        return;
+    }
+    localStorage.setItem(SESSION_KEY, username);
+    enterApp(username);
+}
+
+async function doRegister() {
+    const uEl  = document.getElementById('reg-username');
+    const pEl  = document.getElementById('reg-password');
+    const cEl  = document.getElementById('reg-confirm');
+    const username = uEl.value.trim();
+    const password = pEl.value;
+    const confirm  = cEl.value;
+    let ok = true;
+
+    if (username.length < 3) {
+        document.getElementById('reg-username-err').textContent = '使用者名稱至少 3 個字元 / Min. 3 characters';
+        uEl.classList.add('error'); ok = false;
+    }
+    if (password.length < 6) {
+        document.getElementById('reg-password-err').textContent = '密碼至少 6 字元 / Min. 6 characters';
+        pEl.classList.add('error'); ok = false;
+    }
+    if (password !== confirm) {
+        document.getElementById('reg-confirm-err').textContent = '兩次密碼不一致 / Passwords do not match';
+        cEl.classList.add('error'); ok = false;
+    }
+    if (!ok) return;
+
+    const accs = getAccounts();
+    if (accs[username]) {
+        const alert = document.getElementById('reg-alert');
+        alert.textContent = '❌ 此帳號已存在，請直接登入。 / Username already taken.';
+        alert.className = 'auth-alert error';
+        uEl.classList.add('error');
+        return;
+    }
+    const hash = await sha256(password);
+    accs[username] = { passwordHash: hash, createdAt: new Date().toISOString() };
+    saveAccounts(accs);
+
+    const alert = document.getElementById('reg-alert');
+    alert.textContent = `✓ 帳號「${username}」建立成功！正在跳轉登入… / Account created! Redirecting…`;
+    alert.className = 'auth-alert success';
+    setTimeout(() => {
+        document.getElementById('login-username').value = username;
+        showAuthTab('login');
+        document.getElementById('login-alert').textContent = `✓ 帳號建立成功！請輸入密碼登入。`;
+        document.getElementById('login-alert').className = 'auth-alert success';
+    }, 1200);
+}
+
+function doLogout() {
+    if (!confirm('確定要登出嗎？ / Sign out?')) return;
+    localStorage.removeItem(SESSION_KEY);
+    document.getElementById('header-user').textContent = '';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    clearAllAuthErrors();
+    showAuthTab('login');
+    const sp = document.getElementById('start-page');
+    sp.style.display = 'flex';
+    sp.style.opacity = '1';
+    sp.classList.remove('fade-out');
+    document.getElementById('sidebar').classList.add('collapsed');
+}
+
+function enterApp(username) {
+    document.getElementById('header-user').textContent = `Hi, ${username} 👋`;
+    const sp = document.getElementById('start-page');
+    sp.classList.add('fade-out');
+    setTimeout(() => sp.style.display = 'none', 650);
+    setTimeout(() => document.getElementById('sidebar').classList.remove('collapsed'), 400);
+}
+
+window.addEventListener('load', () => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+        const accs = getAccounts();
+        if (accs[saved]) { enterApp(saved); return; }
+        else localStorage.removeItem(SESSION_KEY);
+    }
+    const accs = getAccounts();
+    const lastUser = Object.keys(accs).pop();
+    if (lastUser) document.getElementById('login-username').value = lastUser;
+});
+
+['login-username','login-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+['reg-username','reg-password','reg-confirm'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+});
+
+
+/* ═══════════════════════════════════════════
+   SEED DATA
+═══════════════════════════════════════════ */
+const SEED_LOCATIONS = [
+    { id:'huashan', name:'華山1914文創園區', nameEn:'Huashan 1914 Creative Park', category:'文創市集', icon:'🏭', lat:25.0441, lng:121.5298, addr:'台北市中正區八德路一段1號', desc:'前身為台灣總督府專賣局台北酒廠，1999年轉型為文化創意產業園區。現為台灣最重要的文創展演場地之一，聚集設計師品牌、藝廊、表演場館與特色餐廳。', officialUrl:'https://www.huashan1914.com/', mapUrl:'https://maps.app.goo.gl/5FLZM1kgFBzBomRBA' },
+    { id:'jiufen', name:'九份老街', nameEn:'Jiufen Old Street', category:'歷史建築', icon:'🏘️', lat:25.1094, lng:121.8441, addr:'新北市瑞芳區九份', desc:'昔日淘金小鎮，紅燈籠、茶樓與蜿蜒石階構成台灣最具代表性的山城意象。傍晚的燈火映照著基隆山與海灣，是許多遊客心目中台灣最美的夜景之一。', officialUrl:'https://www.travel.taipei/zh-tw/attraction/details/35', mapUrl:'https://goo.gl/maps/jiufen' },
+    { id:'taroko', name:'太魯閣國家公園', nameEn:'Taroko National Park', category:'文化中心', icon:'🌿', lat:24.1573, lng:121.6210, addr:'花蓮縣秀林鄉', desc:'大理石峽谷地形與立霧溪共同塑造的壯闊景觀，也是太魯閣族（Truku）世代居住的土地。園區內設有原住民文化展示，介紹編織、狩獵與祭典傳承。', officialUrl:'https://www.taroko.gov.tw/', mapUrl:'https://goo.gl/maps/taroko' },
+    { id:'songshan', name:'松山文創園區', nameEn:'Songshan Cultural Park', category:'文創市集', icon:'🎨', lat:25.0427, lng:121.5600, addr:'台北市信義區光復南路133號', desc:'前身為日治時期松山菸草工廠，現為台灣最大的文創設計基地。每年舉辦台灣設計展、文博會等大型文化活動，保留完整的歷史廠房建築。', officialUrl:'https://www.songshanculturalpark.org/', mapUrl:'https://goo.gl/maps/songshan' },
+    { id:'anping', name:'台南安平古堡', nameEn:'Anping Fort', category:'歷史建築', icon:'🏯', lat:22.9966, lng:120.1610, addr:'台南市安平區國勝路82號', desc:'1624年荷蘭東印度公司興建，是台灣最古老的城堡遺址。古堡旁的老街保存著傳統劍獅工藝、蜜餞文化與百年老店，是台南文史探索的必訪地點。', officialUrl:'https://culture.tainan.gov.tw/', mapUrl:'https://goo.gl/maps/anping' },
+    { id:'shenkeng', name:'深坑老街', nameEn:'Shenkeng Old Street', category:'工藝商店', icon:'🧵', lat:25.0021, lng:121.6183, addr:'新北市深坑區北深路三段', desc:'以臭豆腐聞名，同時也是台北近郊保存完整的清代閩南式街屋聚落。在地工藝師在此製作竹編、豆腐文創商品，呈現農村生活與在地飲食文化。', officialUrl:'https://www.shenkeng.ntpc.gov.tw/', mapUrl:'https://goo.gl/maps/shenkeng' },
+];
+
+const CATEGORY_COLOR = { '歷史建築':'#c96b1a','文創市集':'#5a8f8f','工藝商店':'#b87355','文化中心':'#2b5f6e' };
+
+function stampsKey() { return 'tct_stamps_' + (localStorage.getItem(SESSION_KEY) || 'guest'); }
+const unlockedStamps = new Set(JSON.parse(localStorage.getItem(stampsKey()) || '[]'));
+function saveStamps() { localStorage.setItem(stampsKey(), JSON.stringify([...unlockedStamps])); }
+
+let allLocations = [];
+let markers = {};
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    setTimeout(() => map.invalidateSize(), 320);
+}
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('mapLayout').classList.toggle('hidden', tab !== 'map');
+    document.getElementById('stampPage').classList.toggle('active', tab === 'stamps');
+    document.getElementById('photoPage').classList.toggle('active', tab === 'memory');
+    if (tab === 'map') setTimeout(() => map.invalidateSize(), 50);
+    if (tab === 'stamps') renderStampGrid();
+}
+document.getElementById('themeToggle').addEventListener('click', () => document.body.classList.toggle('night'));
+
+const map = L.map('map', { zoomControl: true }).setView([23.7, 121.0], 7);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+setTimeout(() => map.invalidateSize(), 150);
+
+function makeIcon(emoji, color) {
+    return L.divIcon({
+        className: '',
+        html: `<div style="background:${color||'#9e2a1c'};color:white;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #c9943a;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><span style="transform:rotate(45deg);font-size:13px">${emoji}</span></div>`,
+        iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-34]
+    });
+}
+
+function showStatus(msg) {
+    const el = document.getElementById('api-status');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3500);
+}
+async function fetchCultureData() {
+    showStatus('⏳ Loading from 文化部 Open Data…');
+    try {
+        const url = 'https://cloud.culture.tw/frontsite/trans/SearchShowAction.do?method=doFindTypeJ&category=C&countyId=&actUnit=&fromDate=&toDate=&keyword=';
+        const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error('empty');
+        const catMap  = { A:'文創市集', B:'歷史建築', C:'文化中心', D:'工藝商店' };
+        const iconMap = { '歷史建築':'🏯','文創市集':'🎨','工藝商店':'🧵','文化中心':'🏛️' };
+        const parsed = data.filter(d => d.showInfo?.[0]?.latitude && d.showInfo?.[0]?.longitude).slice(0,30).map((d,i) => {
+            const info = d.showInfo[0], cat = catMap[d.category] || '文化中心';
+            return { id:'api_'+i, name:d.showName, nameEn:d.showName, category:cat, icon:iconMap[cat]||'📍', lat:parseFloat(info.latitude), lng:parseFloat(info.longitude), addr:info.location||'', desc:(d.descriptionFilterHtml||d.masterUnit||'資料來源：文化部').replace(/<[^>]*>/g,'').trim().slice(0,200), officialUrl:d.webSite||'https://cloud.culture.tw/', mapUrl:`https://www.google.com/maps?q=${info.latitude},${info.longitude}` };
+        });
+        showStatus(`✓ Loaded ${parsed.length} sites`); return parsed;
+    } catch(e) { showStatus('ℹ️ Using curated seed data'); return SEED_LOCATIONS; }
+}
+
+function renderLocations(locs) {
+    allLocations = locs;
+    const list = document.getElementById('locationList');
+    list.innerHTML = '';
+    locs.forEach((loc, i) => {
+        const el = document.createElement('div');
+        el.className = 'loc-card'; el.dataset.category = loc.category;
+        el.innerHTML = `<div class="loc-thumb">${loc.icon}</div><div class="loc-info"><div class="loc-name">${loc.name}</div><div class="loc-tag">${loc.category}</div></div>`;
+        el.onclick = () => selectLocation(i);
+        list.appendChild(el);
+    });
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    markers = {};
+    locs.forEach((loc, i) => {
+        const m = L.marker([loc.lat, loc.lng], { icon: makeIcon(loc.icon, CATEGORY_COLOR[loc.category]||'#2b5f6e') })
+            .addTo(map).bindPopup(`<div class="popup-title">${loc.icon} ${loc.name}</div><div class="popup-sub">${loc.category}</div>`)
+            .on('click', () => selectLocation(i));
+        markers[loc.id] = m;
+    });
+    renderStampGrid();
+}
+
+function renderStampGrid() {
+    const grid = document.getElementById('stampGrid');
+    grid.innerHTML = '';
+    allLocations.forEach(loc => {
+        const unlocked = unlockedStamps.has(loc.id);
+        const el = document.createElement('div');
+        el.className = 'stamp-item'; el.id = 'stamp-' + loc.id;
+        el.innerHTML = `<div class="stamp-circle ${unlocked?'':'locked'}">${loc.icon}${unlocked?'<div class="stamp-ribbon">Collected</div>':''}</div><div class="stamp-name">${loc.name}</div><div class="stamp-status ${unlocked?'unlocked':''}">${unlocked?'✓ Collected':'🔒 Locked'}</div>`;
+        grid.appendChild(el);
+    });
+}
+
+function unlockStamp(locId) {
+    if (unlockedStamps.has(locId)) return false;
+    unlockedStamps.add(locId); saveStamps(); renderStampGrid();
+    const stampEl = document.querySelector(`#stamp-${locId} .stamp-circle`);
+    if (stampEl) stampEl.classList.add('just-unlocked');
+    return true;
+}
+
+function selectLocation(i) {
+    const loc = allLocations[i]; if (!loc) return;
+    document.querySelectorAll('.loc-card').forEach((c,j) => c.classList.toggle('selected', j===i));
+    document.getElementById('panelTag').textContent   = loc.category;
+    document.getElementById('panelTitle').textContent = loc.name;
+    document.getElementById('panelDesc').textContent  = loc.desc;
+    document.getElementById('panelImg').textContent   = loc.icon;
+    document.getElementById('panelAddr').innerHTML    = loc.addr ? `📍 ${loc.addr}` : '';
+    document.getElementById('panelLinks').innerHTML   = `<a class="panel-link-btn btn-primary" href="${loc.officialUrl}" target="_blank" rel="noopener">Official Website ›</a><a class="panel-link-btn btn-outline" href="${loc.mapUrl}" target="_blank" rel="noopener">📍 View on Google Maps</a>`;
+    document.getElementById('infoPanel').classList.add('open');
+    map.setView([loc.lat, loc.lng], 14, { animate: true });
+}
+function closePanel() {
+    document.getElementById('infoPanel').classList.remove('open');
+    document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
+}
+
+function applyFilter() {
+    const checked = [...document.querySelectorAll('#Filter input:checked')].map(cb => cb.value);
+    document.querySelectorAll('.loc-card').forEach((card, i) => {
+        const show = checked.includes(allLocations[i]?.category);
+        card.style.display = show ? 'flex' : 'none';
+        const loc = allLocations[i];
+        if (loc && markers[loc.id]) { show ? map.addLayer(markers[loc.id]) : map.removeLayer(markers[loc.id]); }
+    });
+}
+document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    document.querySelectorAll('.loc-card').forEach((card, i) => {
+        const loc = allLocations[i];
+        card.style.display = (!q || loc.name.toLowerCase().includes(q) || (loc.addr||'').toLowerCase().includes(q)) ? 'flex' : 'none';
+    });
+});
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000, toRad = d => d*Math.PI/180;
+    const dLat = toRad(lat2-lat1), dLng = toRad(lng2-lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function exifGpsToDecimal(arr, ref) {
+    if (!arr || arr.length < 3) return null;
+    const d = arr[0] + arr[1]/60 + arr[2]/3600;
+    return (ref==='S'||ref==='W') ? -d : d;
+}
+
+function handlePhotoUpload(input) {
+    const file = input.files[0]; if (!file) return;
+    const toast = document.getElementById('upload-toast');
+    toast.className = 'info'; toast.textContent = '⏳ 讀取照片中…';
+    const r = new FileReader(); r.readAsDataURL(file);
+    r.onload = e => {
+        const dataUrl = e.target.result;
+        const img = new Image(); img.src = dataUrl;
+        img.onload = () => {
+            EXIF.getData(img, function() {
+                const photoLat = exifGpsToDecimal(EXIF.getTag(this,'GPSLatitude'), EXIF.getTag(this,'GPSLatitudeRef'));
+                const photoLng = exifGpsToDecimal(EXIF.getTag(this,'GPSLongitude'), EXIF.getTag(this,'GPSLongitudeRef'));
+                const dateTaken = EXIF.getTag(this,'DateTimeOriginal') || '';
+                if (photoLat===null || photoLng===null) {
+                    toast.className = 'error';
+                    toast.innerHTML = `⚠️ 這張照片沒有 GPS 資訊。<br><small>手動選擇地點：</small><br><br>${allLocations.map((loc,i)=>`<button onclick="manualUnlock(${i},'${dataUrl}','${file.name}')" style="margin:3px;padding:4px 10px;cursor:pointer;background:var(--seafoam);color:white;border:none;border-radius:4px;font-size:0.7rem">${loc.icon} ${loc.name}</button>`).join('')}`;
+                    input.value=''; return;
                 }
-                document.getElementById('pw-hint').textContent =
-                    value.length ? (labels[score - 1] || '太弱') : '請輸入密碼';
-            }
+                const matches = allLocations.map((loc,i)=>({loc,i,dist:haversineDistance(photoLat,photoLng,loc.lat,loc.lng)})).filter(m=>m.dist<500).sort((a,b)=>a.dist-b.dist);
+                if (!matches.length) { toast.className='error'; toast.innerHTML=`❌ 拍攝地點距離所有文化地點超過 500 公尺。`; input.value=''; return; }
+                const {loc, dist} = matches[0];
+                const isNew = unlockStamp(loc.id);
+                const distStr = dist<1000 ? `${Math.round(dist)} m` : `${(dist/1000).toFixed(1)} km`;
+                toast.className='success';
+                toast.innerHTML = isNew ? `🎉 已解鎖 <strong>${loc.name}</strong> 的 stamp！（距離 ${distStr}）` : `📍 已確認在 <strong>${loc.name}</strong> 附近（距離 ${distStr}）`;
+                addPhotoCard(dataUrl, loc.name, dateTaken||'未知日期', photoLat, photoLng);
+                input.value='';
+            });
+        };
+    };
+}
+function manualUnlock(locIndex, dataUrl, filename) {
+    const loc = allLocations[locIndex], isNew = unlockStamp(loc.id);
+    const toast = document.getElementById('upload-toast');
+    toast.className='success';
+    toast.innerHTML = isNew ? `🎉 已手動解鎖 <strong>${loc.name}</strong> 的 stamp！` : `📍 <strong>${loc.name}</strong> 的 stamp 已在你的收藏中。`;
+    addPhotoCard(dataUrl, loc.name, new Date().toLocaleDateString(), null, null);
+}
+function addPhotoCard(dataUrl, locName, dateStr, lat, lng) {
+    const grid = document.getElementById('photoGrid');
+    const card = document.createElement('div'); card.className='photo-card';
+    const displayDate = dateStr.replace(/:/g,'/').split(' ')[0];
+    const coordStr = lat ? `${lat.toFixed(3)}, ${lng.toFixed(3)}` : '';
+    card.innerHTML=`<div class="photo-card-img"><img src="${dataUrl}" alt="${locName}"></div><div class="photo-info"><div class="photo-loc">${locName}</div><div class="photo-date">${displayDate}${coordStr?' · '+coordStr:''}</div></div>`;
+    card.onclick=()=>openLightbox(dataUrl,`${locName} · ${displayDate}`);
+    grid.insertBefore(card, grid.firstChild);
+}
 
-            // ── 顯示錯誤 ──
-            function showError(id, msg) {
-                const el = document.getElementById(id);
-                el.textContent = msg;
-                el.style.display = 'block';
-            }
+function openLightbox(src, info) {
+    document.getElementById('lightbox-img').src=src;
+    document.getElementById('lightbox-info').textContent=info;
+    document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 
-            // ── 登入成功後進入主頁 ──
-            let mapInitialized = false;
-
-            function enterApp(name) {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                document.getElementById('user-name-display').textContent = '👤 ' + name;
-
-                if (!mapInitialized) {
-                const map = L.map('map').setView([23.8, 121], 7);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                mapInitialized = true;
-                }
-            }
-
-            // ── 登入 ──
-            function handleLogin() {
-                const email    = document.getElementById('login-email').value.trim();
-                const password = document.getElementById('login-password').value;
-
-                if (!email || !password) {
-                    showError('login-error', '請填寫電子郵件與密碼！');
-                    return;
-                }
-
-                // TODO: 替換成真實 API
-                // const res = await fetch('/api/login', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ email, password })
-                // });
-
-                // 示範：直接通過
-                enterApp(email.split('@')[0]);
-            }
-
-            // ── 註冊 ──
-            function handleRegister() {
-                const name     = document.getElementById('reg-name').value.trim();
-                const username = document.getElementById('reg-username').value.trim();
-                const email    = document.getElementById('reg-email').value.trim();
-                const password = document.getElementById('reg-password').value;
-
-                if (!name || !username || !email || !password) {
-                    showError('register-error', '請填寫所有欄位！');
-                    return;
-                }
-                if (password.length < 8) {
-                    showError('register-error', '密碼至少需要 8 個字元！');
-                    return;
-                }
-
-                // TODO: 替換成真實 API
-                // const res = await fetch('/api/register', { ... });
-
-                enterApp(name);
-            }
-
-            // ── 登出 ──
-            function handleLogout() {
-                document.getElementById('main-app').style.display = 'none';
-                document.getElementById('auth-overlay').style.display = 'flex';
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').style.value = '';
-            }
-
-            // ── 原本的 tab 切換 ──
-            function switchTab(name, btn) {
-                // 你原本的頁籤邏輯
-            }
-        </script>
-    </body>
+fetchCultureData().then(locs => { renderLocations(locs); selectLocation(0); });
+</script>
+</body>
 </html>
