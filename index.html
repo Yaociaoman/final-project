@@ -74,7 +74,14 @@
                 box-shadow: 0 12px 48px rgba(0,0,0,0.35);
             }
 
-            /* header */
+            #auth-header{
+                background: var(--brick-red);
+                color: var(--paper-white);
+                padding: 1.4rem 2rem;
+                text-align: center;
+            }
+
+            /* header 
             header{
                 background-color: var(--header-bg);
                 color: var(--paper-white);
@@ -85,10 +92,10 @@
                 justify-content: space-between;
                 flex-shrink: 0;/*when window shrink, element doesn't shrink*/
 
-                border-bottom:3px solid var(--stamp-gold);
+              /*  border-bottom:3px solid var(--stamp-gold);
                 transition: background-color 0.5s;
             }
-
+            */
             
             /* tool bar */
             /* map page */
@@ -158,7 +165,8 @@
         Account data is stored locally in your browser only.</p>
     </div>
 </div>
-        <!-- Header -->
+    <!-- 
+        <!- Header ->
         <header>
             <div class="header-left">
                 <h1>Taiwan Cultural Trails</h1>
@@ -176,39 +184,39 @@
             </div>
         </header>
 
-        <!-- Tool Bar -->
+        <!- Tool Bar ->
         <div class="tool-bar">
             <button class="tool-btn active" onclick="switchTab('map',this)">Explore Map</button>
             <button class="tool-btn"        onclick="switchTab('stamps',this)">Stamp Collection</button>
             <button class="tool-btn"        onclick="switchTab('memory')">Memory Photos</button>
         </div>
 
-            <!-- Map page -->
+            <!- Map page ->
             <div class="map-layout" id="mapLayout">
 
-                <!-- Map -->
+                <!- Map ->
                  <div class="map-container">
                     <div id="map"></div>
                     <div id="api-status"></div>
                  </div>
 
-                <!-- Sidebar -->
+                <!- Sidebar ->
                 <div id="sidebar" class="collapsed">
 
-                    <!-- 收合button -->
+                    <!- 收合button ->
                      <button id="sidebr-button" onclick="toggleSidebar()" title="Toggle sidebar">x</button>
                     
-                    <!-- Search -->
+                    <!- Search ->
                     <div class="sidebar-section">
                         <h3>⌕ Search</h3>
-                        <!--透明框框搜尋欄（可以輸入的）-->
+                        <!-透明框框搜尋欄（可以輸入的）->
                         <div class="search-wrap">
                             <span class="search-icon">⌕</span>
                             <input type="text" id="searchInput" placeholder="Search location, brand...">
                         </div>
                     </div>
 
-                    <!-- Filter -->
+                    <!- Filter ->
                     <div class="sidebar-section">
                         <h3>Filter by Category</h3>
                         <div class="filter" id="Filter">
@@ -243,17 +251,17 @@
                         </div>
                     </div>
                     
-                    <!-- Location Shown -->
+                    <!- Location Shown ->
                     <div class="sidebar-section" style="padding-bottom:0.4rem; border-bottom:none;">
                         <h3>Locations</h3>
                     </div>
-                    <!-- loading -->
+                    <!- loading ->
                     <div class="location-list" id="locationList">
                         <div class="loc-loading">Loading cultural sites...</div>
                     </div>
                 </div>
 
-                <!-- Info panel-->
+                <!- Info panel->
                 <div class="info-panel">
                     <div class="panel-header">
                         <div class="panel-tag" id="panelTag">Category</div>
@@ -269,22 +277,22 @@
 
             </div>
 
-            <!-- Stamp Page -->
+            <!- Stamp Page ->
             <div class="stamp-page">
                 <div class="page-title">Stamp Album</div>
                 <p class="page-sub">Visit each location in person (within 500 m) to unlock your stamp.</p>
                 <div class="stamp-grid" id="stampGrid"></div>
             </div>
 
-            <!-- Photo storage -->
+            <!- Photo storage ->
             <div class="photo-page" id="photoPage">
                 <div class="page-title">Memory Photo</div>
                 <p class="page-sub">Upload photos from your cultural journey. GPS is verified automatically.</p>
                 
-                <!--
+                <!-
                     upload-zone -> file input
                     accept="image" (only image)
-                -->
+                ->
                 <div class="upload-zone" onclick="document.getElementById('filterInput').click()">
                     <div class="upload-icon">📤</div>
                     <p>Click to upload your memory photo<br><small>GPS location will be read from EXIF data</small></p>
@@ -292,15 +300,17 @@
                 </div>
             </div>
             <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
-            <!-- Uploaded Photo -->
+            <!- Uploaded Photo ->
             <div id="uploaded-toast"></div>
             
-            <!-- Zoom in photo -->
+            <!- Zoom in photo ->
             <div class="lightbox" onclick="closeLightbox()">
                 <button id="lightbox-close" onclick="closeLightbox()">x</button>
                 <img id="lightbox-img" src="" alt="">
                 <div id="lightbox-info"></div>
             </div>
+     -->
+<!--
         <script>
             //open first panel by default
             /* ═══════════════════════════════════════════
@@ -501,5 +511,6 @@ window.addEventListener('load', () => {
 
             selectLocation(0);
         </script>
+    -->
     </body>
 </html>
