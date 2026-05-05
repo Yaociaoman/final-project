@@ -55,7 +55,7 @@
             }
             /* start page (login) */
      
-            #auth-overlay{
+            #start-page{
                 position: fixed;
                 inset: 0;
                 background: #0a1f25;
@@ -65,7 +65,7 @@
                 z-index:9999;
             }
 
-            #auth-box{
+            #start-card{
                 background: var(--paper-white);
                 border-radius: 14px;
                 overflow: hidden;
@@ -74,7 +74,7 @@
                 box-shadow: 0 12px 48px rgba(0,0,0,0.35);
             }
 
-            #auth-header{
+            #start-card.subtitle{
                 background: var(--brick-red);
                 color: var(--paper-white);
                 padding: 1.4rem 2rem;
@@ -84,14 +84,12 @@
             #header h2{
                 font-size: 1.6rem;
                 letter-spacing: 0.04em;
-                text-align: center;
             }
 
             #header p{
                 font-size: 0.85rem;
                 opacity: 0.8;
                 margin-top: 0.3rem;
-                text-align: center;
             }
 
             /* tabs */
@@ -122,6 +120,32 @@
                 border-bottom: 2px solid var(--brick-red);
                 margin-bottom: -2px;
             }
+
+            /* Form */
+            .auth-form{
+
+            }
+
+            .auth-form.active{
+
+            }
+
+            .start-label{
+
+            }
+
+            .start-input{
+
+            }
+
+            .start-btn{
+
+            }
+
+            .input-error-msg{
+
+            }
+
             /* header */
             header{
                 background-color: var(--header-bg);
@@ -156,10 +180,8 @@
 <!-- Start Page -->
 <div id="start-page">
     <div class="start-card">
-        <span class="start-stamp">🗺️</span>
         <h2>Taiwan Cultural Trails</h1>
-        <p class="subtitle">Beneficial &amp; Sustainable Tourism</p>
-        <div class="dot-divider"></div>    
+        <p class="subtitle">Beneficial &amp; Sustainable Tourism</p>   
         
         <!-- Tab Switcher-->
         <div class="auth-tabs">
