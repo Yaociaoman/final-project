@@ -131,13 +131,23 @@
                 display: block;
                 font-size: 0.75rem;
                 color: #477273;
-                
+                letter-spacing: 0.1rem;
+                text-transform: uppercase;
+                text-align: left;
+                margin-bottom: 0.35rem;
+                margin-top: 0.8rem;
             }
 
             .start-input{
+                width: 100%;
+                padding: 0.65rem 1rem;
+                background: #1e1a16;
+                border: 1px solid #a56249;
+                border-radius: 4px;
                 color: #d6b19b;
                 font-size: 0.65rem;
-
+                font-family: "Times New Roman", serif;
+                transition: border-color 0.2s, background 0.2s;
             }
 
             .start-btn{
@@ -156,9 +166,23 @@
             }
 
             .input-error-msg{
-                
+                font-size: 0.64rem;
+                color: #a56249;
+                text-align: left;
+                min-height: 1.1rem;
+                margin-bottom: 0.3rem;
             }
 
+            /* Auth alert */
+
+            .auth-alert{
+                font-size: 0.7rem;
+                border-radius: 3px;
+                padding: 0.5rem 0.7rem;
+                margin-top: 0.8rem; 
+                display: none;
+                line-height: 1.5;
+            }
             .auth-form.active input[type="text"],
             .auth-form.active input[type="password"] {
                 width: 100%;
