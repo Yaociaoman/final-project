@@ -85,13 +85,15 @@
                 font-size: 1.6rem;
                 letter-spacing: 0.04em;
                 text-align: center;
+                color: #f5f0e8;
             }
 
             #auth-header p{
-                font-size: 0.85rem;
+                font-size: 0.75rem;
                 opacity: 0.8;
                 margin-top: 0.3rem;
                 text-align: center;
+                color: #f5f0e8;
             }
 
             /* tabs */
@@ -240,51 +242,51 @@
         <div class="auth-header">
             <h2>Taiwan Cultural Trails</h1>
             <p class="subtitle">Beneficial &amp; Sustainable Tourism</p>   
-            
-            <!-- Tab Switcher-->
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">登入．Sign in</button>
-                <button class="auth-tab" id="tab-register" onclick="showAuthTab('register')">註冊．Register</button>
-            </div>    
-            <!-- Login Form -->
-            <div class="auth-form active" id="form-login">
-                <div class="start-label">使用者名稱 / Username</div>
-                <input class="start-input" id="login-username" type="text" placeholder="請輸入您的帳號" autocomplete="username" maxlength="24">
-                <div class="input-error-msg" id="login-username-err"></div>
-
-                <div class="start-label">密碼 / Password</div>
-                <input class="start-input" id="login-password" type="password" placeholder="請輸入您的密碼" autocomplete="current-password">
-                <div class="input-error-msg" id="login-password-err"></div>
-
-                <div class="auth-alert" id="login-alert"></div>
-                <button class="start-btn" onclick="doLogin()">登入．Sign in</button>
-            </div>
-
-            <!--Register Form-->
-            <div class="auth-form" id="form-register">
-                <div class="start-label">使用者名稱 / Username</div>
-                <input class="start-input" id="reg-username" type="text" placeholder="請設定您的帳號(3-20字元)" autocomplete="username" maxlength="24" oninput="clearRegErr('reg-username-err','reg-username')">
-                <div class="input-error-msg" id="reg-username-err"></div>
-
-                <div class="start-label">密碼 / Password</div>
-                <input class="start-input" id="reg-password" type="password" placeholder="設定密碼(至少6字元)" autocomplete="new-password" oninput="checkPasswordStrenth(this.value)">
-                <div class="pw-strength">
-                    <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill"></div></div>
-                    <div class="pw-strength-text" id="pw-label"></div>
-                </div>
-                <div class="input-error-msg" id="reg-password-err"></div>
-
-                <div class="start-label">確認密碼 / Confirm Password</div>
-                <input class="start-input" id="reg-confirm" type="password" placeholder="請再次輸入密碼" autocomplete="new-password" oninput="clearRegErr('reg-confirm-err','reg-confirm')">
-                <div class="input-error-msg" id="reg-confirm-err"></div>
-
-                <div class="auth-alert" id="reg-alert"></div>
-                <button class="start-btn" onclick="doRegister()">建立帳號 · Create Account</button>
-            </div>
-
-        <p class="start-note">帳號資料僅儲存於您的瀏覽器，不會上傳任何伺服器。<br>
-            Account data is stored locally in your browser only.</p>
         </div>
+
+        <!-- Tab Switcher-->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">登入．Sign in</button>
+            <button class="auth-tab" id="tab-register" onclick="showAuthTab('register')">註冊．Register</button>
+        </div>   
+
+        <!-- Login Form -->
+        <div class="auth-form active" id="form-login">
+            <div class="start-label">使用者名稱 / Username</div>
+            <input class="start-input" id="login-username" type="text" placeholder="請輸入您的帳號" autocomplete="username" maxlength="24">
+            <div class="input-error-msg" id="login-username-err"></div>
+
+            <div class="start-label">密碼 / Password</div>
+            <input class="start-input" id="login-password" type="password" placeholder="請輸入您的密碼" autocomplete="current-password">
+            <div class="input-error-msg" id="login-password-err"></div>
+
+            <div class="auth-alert" id="login-alert"></div>
+             <button class="start-btn" onclick="doLogin()">登入．Sign in</button>
+        </div>
+
+        <!--Register Form-->
+        <div class="auth-form" id="form-register">
+            <div class="start-label">使用者名稱 / Username</div>
+            <input class="start-input" id="reg-username" type="text" placeholder="請設定您的帳號(3-20字元)" autocomplete="username" maxlength="24" oninput="clearRegErr('reg-username-err','reg-username')">                <div class="input-error-msg" id="reg-username-err"></div>
+
+            <div class="start-label">密碼 / Password</div>
+            <input class="start-input" id="reg-password" type="password" placeholder="設定密碼(至少6字元)" autocomplete="new-password" oninput="checkPasswordStrenth(this.value)">
+            <div class="pw-strength">
+                <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill"></div></div>
+                <div class="pw-strength-text" id="pw-label"></div>
+            </div>
+            <div class="input-error-msg" id="reg-password-err"></div>
+
+            <div class="start-label">確認密碼 / Confirm Password</div>
+            <input class="start-input" id="reg-confirm" type="password" placeholder="請再次輸入密碼" autocomplete="new-password" oninput="clearRegErr('reg-confirm-err','reg-confirm')">
+            <div class="input-error-msg" id="reg-confirm-err"></div>
+
+            <div class="auth-alert" id="reg-alert"></div>
+            <button class="start-btn" onclick="doRegister()">建立帳號 · Create Account</button>
+        </div>
+
+    <p class="start-note">帳號資料僅儲存於您的瀏覽器，不會上傳任何伺服器。<br>
+    Account data is stored locally in your browser only.</p>
     </div>
 </div>
     <!-- 
