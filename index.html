@@ -84,12 +84,14 @@
             #auth-header h2{
                 font-size: 1.6rem;
                 letter-spacing: 0.04em;
+                text-align: center;
             }
 
             #auth-header p{
                 font-size: 0.85rem;
                 opacity: 0.8;
                 margin-top: 0.3rem;
+                text-align: center;
             }
 
             /* tabs */
@@ -114,7 +116,7 @@
             }
 
             .auth-tab.active{
-                background: var(--paper-white);
+                background: #f5f0e8;
                 color: #8e0302;
                 font-weight: bold;
                 border-bottom: 2px solid #8e0302;
@@ -123,22 +125,52 @@
 
             /* Form */
             .auth-form{ display: none;}
-            .auth-form.active{ display: none;}
+            .auth-form.active{ padding: 1.8rem 2rem;}
 
             .start-label{
+                display: block;
+                font-size: 0.75rem;
+                color: #477273;
                 
             }
 
             .start-input{
+                color: #d6b19b;
+                font-size: 0.65rem;
 
             }
 
             .start-btn{
-
+                width: 100%;
+                padding: 0.75rem;
+                background: #8e0302;
+                color: #f5f0e8;
+                border: none;
+                border-radius: 8px;
+                font-family: "Times New Roman", serif;
+                font-size: 1rem;
+                cursor: pointer;
+                margin-top: 0.5rem;
+                letter-spacing: 0.05em;
+                transition: background 0.2s, transform 0.1s;
             }
 
             .input-error-msg{
+                
+            }
 
+            .auth-form.active input[type="text"],
+            .auth-form.active input[type="password"] {
+                width: 100%;
+                padding: 0.6rem 0.85rem;
+                border: 1px solid var(--beige);
+                border-radius: 7px;
+                font-family: "Times New Roman", serif;
+                font-size: 0.95rem;
+                background: #fffcf7;
+                color: var(--ink);
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
             }
 
             /* header */
