@@ -58,7 +58,7 @@
             #start-page{
                 position: fixed;
                 inset: 0;
-                background: #0a1f25;
+                background: #477273;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -150,6 +150,10 @@
                 transition: border-color 0.2s, background 0.2s;
             }
 
+            .start-input::placeholder { color: rgba(255,255,255,0.28); }
+            .start-input:focus { border-color: var(--stamp-gold); background: rgba(255,255,255,0.15); }
+            .start-input.error { border-color: #e57373; }
+
             .start-btn{
                 width: 100%;
                 padding: 0.75rem;
@@ -164,6 +168,9 @@
                 letter-spacing: 0.05em;
                 transition: background 0.2s, transform 0.1s;
             }
+
+            .start-btn:hover { background: var(--brick-light); }
+            .start-btn:active { transform: scale(0.98); }
 
             .input-error-msg{
                 font-size: 0.64rem;
@@ -183,20 +190,20 @@
                 display: none;
                 line-height: 1.5;
             }
-            .auth-form.active input[type="text"],
-            .auth-form.active input[type="password"] {
-                width: 100%;
-                padding: 0.6rem 0.85rem;
-                border: 1px solid var(--beige);
-                border-radius: 7px;
-                font-family: "Times New Roman", serif;
-                font-size: 0.95rem;
-                background: #fffcf7;
-                color: var(--ink);
-                outline: none;
-                transition: border-color 0.2s, box-shadow 0.2s;
-            }
 
+            .auth-alert.error   { background: rgba(229,115,115,0.15); color: #ef9a9a; border: 1px solid rgba(229,115,115,0.3); display: block; }
+            .auth-alert.success { background: rgba(129,199,132,0.15); color: #a5d6a7; border: 1px solid rgba(129,199,132,0.3); display: block; }
+
+            .start-note {
+                font-size: 0.65rem; 
+                color: rgba(245,240,232,0.3);
+                margin-top: 1rem; 
+                line-height: 1.6;
+            }
+            #start-page.fade-out { animation: fadeOut 0.6s ease forwards; }
+            @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+
+            
             /* header */
             header{
                 background-color: var(--header-bg);
