@@ -364,8 +364,8 @@
         <div class="dot-divider"></div>
         
         <div class="auth-toggle-group">
-            <button id="toggle-login" class="auth-toggle-btn active" onclick="setAuthMode('login')">Sign In / 登入</button>
-            <button id="toggle-register" class="auth-toggle-btn" onclick="setAuthMode('register')">Register / 註冊</button>
+            <button id="toggle-login" class="auth-toggle-btn active" onclick="setAuthMode('login')">登入 / Sign In</button>
+            <button id="toggle-register" class="auth-toggle-btn" onclick="setAuthMode('register')">註冊 / Register</button>
         </div>
 
         <div id="auth-hint" class="auth-hint"></div>
@@ -389,7 +389,7 @@
             <small class="strength-text" id="strength-text" style="display: none;"></small>
         </div>
 
-        <button class="start-btn" id="submit-auth-btn" onclick="handleAuthSubmit()">Begin Journey / 開始探索</button>
+        <button class="start-btn" id="submit-auth-btn" onclick="handleAuthSubmit()">開始探索 / Begin Journey</button>
         <p class="start-note">所有帳號與旅程進度皆安全儲存於您的瀏覽器本地空間。</p>
     </div>
 </div>
@@ -594,7 +594,7 @@ function setAuthMode(mode) {
     document.getElementById('toggle-register').classList.toggle('active', mode === 'register');
     document.getElementById('name-group').style.display = mode === 'register' ? 'block' : 'none';
     document.getElementById('strength-meter').style.display = mode === 'register' ? 'block' : 'none';
-    document.getElementById('submit-auth-btn').textContent = mode === 'login' ? 'Begin Journey / 開始探索' : 'Register / 註冊';
+    document.getElementById('submit-auth-btn').textContent = mode === 'login' ? '開始探索 / Begin Journey' : '註冊 / Register';
     
     // 清除欄位
     document.getElementById('password-input').value = '';
@@ -723,7 +723,7 @@ function handleSignOut() {
         currentUserEmail = null;
         localStorage.removeItem('tct_session_user');
         
-        // 重置畫面欄位與回到登入大廳
+        // 重置畫面欄位與回到登入介面
         document.getElementById('email-input').value = '';
         document.getElementById('password-input').value = '';
         setAuthMode('login');
